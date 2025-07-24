@@ -1,66 +1,61 @@
 package com.example.vsm.controller;
 
 import com.example.vsm.model.Volunteer;
-import com.example.vsm.repository.VolunteerRepository;
-import jakarta.validation.Valid;
+import com.example.vsm.service.VolunteerService;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/volunteers")
+@RequestMapping("/api/volunteers")
+@RequiredArgsConstructor
+@Validated
 public class VolunteerController {
+    private final VolunteerService service;
+    private static final Logger logger = LoggerFactory.getLogger(VolunteerController.class);
 
-    private final VolunteerRepository repository;
-
-    public VolunteerController(VolunteerRepository repository) {
-        this.repository = repository;
-    }
-
-    // Create
     @PostMapping
-    public Volunteer addVolunteer(@Valid @RequestBody Volunteer volunteer) {
-        return repository.save(volunteer);
+    public ResponseEntity<Volunteer> create(@Valid @RequestBody Volunteer volunteer) {
+        logger.info("Creating volunteer: {}", volunteer);
+        return ResponseEntity.ok(service.createVolunteer(volunteer));
     }
 
-    // Read All
-    @GetMapping
-    public List<Volunteer> getAllVolunteers() {
-        return repository.findAll();
-    }
-
-    // Read by ID
-    @GetMapping("/{id}")
-    public Optional<Volunteer> getVolunteerById(@PathVariable String id) {
-        return repository.findById(id);
-    }
-
-    // Update
     @PutMapping("/{id}")
-    public Volunteer updateVolunteer(@PathVariable String id, @Valid @RequestBody Volunteer volunteer) {
-        volunteer.setId(id); // Ensure it overwrites existing
-        return repository.save(volunteer);
+    public ResponseEntity<Volunteer> update(@PathVariable String id, @Valid @RequestBody Volunteer volunteer) {
+        logger.info("Updating volunteer with id {}: {}", id, volunteer);
+        return ResponseEntity.ok(service.updateVolunteer(id, volunteer));
     }
 
-    // Delete
     @DeleteMapping("/{id}")
-    public void deleteVolunteer(@PathVariable String id) {
-        repository.deleteById(id);
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        logger.info("Deleting volunteer with id: {}", id);
+        service.deleteVolunteer(id);
+        return ResponseEntity.noContent().build();
     }
 
-    // Search
+    @GetMapping
+    public ResponseEntity<List<Volunteer>> getAll() {
+        return ResponseEntity.ok(service.getAllVolunteers());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Volunteer> getById(@PathVariable String id) {
+        return ResponseEntity.ok(service.getVolunteerById(id));
+    }
+
     @GetMapping("/search")
-    public List<Volunteer> searchVolunteers(
+    public ResponseEntity<List<Volunteer>> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Integer age,
             @RequestParam(required = false) String department,
-            @RequestParam(required = false) String location
-    ) {
-        if (name != null) return repository.findByNameContainingIgnoreCase(name);
-        if (age != null) return repository.findByAge(age);
-        if (department != null) return repository.findByDepartment(department);
-        if (location != null) return repository.findByLocation(location);
-        return repository.findAll(); // default fallback
+            @RequestParam(required = false) String location) {
+        return ResponseEntity.ok(service.searchVolunteers(name, age, department, location));
     }
 }
