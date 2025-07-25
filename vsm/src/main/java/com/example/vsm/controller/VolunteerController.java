@@ -19,6 +19,7 @@ import java.util.List;
 @Validated
 public class VolunteerController {
     private final VolunteerService service;
+    // Logger instance for tracking actions and debugging
     private static final Logger logger = LoggerFactory.getLogger(VolunteerController.class);
 
     @PostMapping
@@ -49,6 +50,11 @@ public class VolunteerController {
     public ResponseEntity<Volunteer> getById(@PathVariable String id) {
         return ResponseEntity.ok(service.getVolunteerById(id));
     }
+
+
+     // Search volunteers by name, age, department, or location
+     //URL: GET /api/volunteers/search?name=John&department=AV
+
 
     @GetMapping("/search")
     public ResponseEntity<List<Volunteer>> search(
